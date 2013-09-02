@@ -83,24 +83,23 @@ class dpack:
 			print e
 		
 	def __obtainFiles(self):
-		self.__log.debug("Inside of %s" % inspect.stack()[1][3])		
+		# use gevent to spawn a bunch of greenlets to request different files
 		monkey.patch_all()
 		jobs = [gevent.spawn(self.__fetchFile, url) for url in self.__urlList]
-		gevent.joinall(jobs,timeout=60)
+		gevent.joinall(jobs,timeout=60) # timeout because we don't care how much we get
 		
 	def __obtainUrls(self):
-		self.__log.debug("Inside of %s" % inspect.stack()[1][3])
-		for i in range(0,3):
+		for i in range(0,3): # this should be a config
 			prevIndex = "1"
 			try:
 				ftype = self.__ftypes[random.randint(0,len(self.__ftypes)-1)]
-				self.__ftypes.remove(ftype)
+				self.__ftypes.remove(ftype) # pop our choice out of the list to avoid dups
 			except:
 				self.__ftypes = ['doc']
 				
-			kill = False
+			kill = False # flag bit for when Google doesn't want to return content
 			
-			for i in range(0,5):
+			for i in range(0,5): # this should be a config
 				if not kill:
 					query = urllib.urlencode({'q' : '%s filetype:%s' % (self.__urlQuery, ftype)})
 					self.__log.info("Using query: %s" % query)
@@ -130,7 +129,7 @@ class dpack:
 		self.__log.info("Query set: %s" % query)
 		self.__urlQuery = query
 		
-	def setOutPath(self,path):
+	def setOutPath(self,path): # should check the path, but lazy
 		self.__log.info("Path set: %s" % path)
 		self.__outPath = path
 		
@@ -144,9 +143,8 @@ class dpack:
 			raise Exception("Query not set")
 			
 	def sprayPack(self,col):
-		self.__log.debug("Inside of %s" % inspect.stack()[1][3])
 		self.__log.info("Spraying into %s" % col)
-		gfsDb = Connection()[col]
+		gfsDb = Connection()[col] # assume local host
 		fs = gridfs.GridFS(gfsDb)
 		for handle in self.__fileList:
 			try:
